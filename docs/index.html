@@ -15,6 +15,7 @@
     .error {
         color: red;
     }
+    .formula { margin-top: 20px; font-style: italic; font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
@@ -71,6 +72,20 @@
       localStorage.setItem('rhr', rhr);
     }
   </script>
+  <br>
+  <h4>About</h4>
+  <div>The formula used for each zone above is:</div>
+  <div class="formula">(MHR - RHR) * % + RHR</div>
+  <br>
+  <div>The maximum heart rate (MHR) is calculated using the age input. Every year 30 and below is expected to increase maximum heart rate by the formula 220-age. After age 30 each year counts only half a beat in that difference.</div>
+  <br>
+  <div>The percentages used are as follows:</div>
+  <ul>
+      <li>UT2 = 59%-67%</li>
+      <li>UT1 = 67%-75%</li>
+      <li>AT = 75%-85%</li>
+      <li>TR = 85%-100%</li>
+  </ul>
 </body>
 </html>
 
