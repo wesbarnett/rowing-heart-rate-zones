@@ -23,8 +23,13 @@
 <body>
   <h2>Rowing Heart Rate Zones Calculator</h2>
 
+  <div>Enter your age to calculate maximum heart rate, or enter maximum heart rate directly.</div>
+
   <label for="age">Age (years):</label>
   <input type="number" id="age" placeholder="Enter age">
+
+  <label for="mhrInput">Maximum Heart Rate (bpm):</label>
+  <input type="number" id="mhrInput" placeholder="Auto-calculated if age entered">
 
   <label for="rhr">Resting Heart Rate (bpm):</label>
   <input type="number" id="rhr" placeholder="Enter resting heart rate">
@@ -32,7 +37,6 @@
   <button type="button" onclick="calculateZone()">Calculate</button>
 
   <div class="error" id="error"></div>
-  <div class="result-box" id="mhr">Maximum heart rate:</div>
   <div class="result-box" id="result_UT2">UT2:</div>
   <div class="result-box" id="result_UT1">UT1:</div>
   <div class="result-box" id="result_AT">AT:</div>
@@ -42,36 +46,41 @@
     window.addEventListener('DOMContentLoaded', () => {
         const savedAge = localStorage.getItem('age');
         const savedRHR = localStorage.getItem('rhr');
+        const savedMHR = localStorage.getItem('mhr');
         if (savedAge) document.getElementById('age').value = savedAge;
         if (savedRHR) document.getElementById('rhr').value = savedRHR;
-        if (savedAge && savedRHR) {
-            calculateZone();
-        }
+        if (savedMHR) document.getElementById('mhrInput').value = savedMHR;
+        if (savedRHR && savedMHR) calculateZone();
+
+    });
+    document.getElementById('age').addEventListener('input', () => {
+      const age = parseFloat(document.getElementById('age').value);
+      if (!isNaN(age)) {
+          let calculated;
+          if (age < 31) {
+              calculated = 220 - age;
+          } else {
+              calculated = 190 - (age - 30) / 2;
+          }
+          document.getElementById('mhrInput').value = calculated.toFixed(0);
+      }
     });
     function calculateZone() {
       const age = parseFloat(document.getElementById('age').value);
       const rhr = parseFloat(document.getElementById('rhr').value);
-      if (isNaN(age) || isNaN(rhr)) {
-        document.getElementById('error').innerText = 'Please enter valid numbers.';
-        return;
-      }
-      let mhr;
-      if (age < 31) {
-          mhr = 220 - age;
-      } else {
-          mhr = 190 - (age - 30) / 2;
-      }
-      const target_59 = (mhr - rhr) * 0.59 + rhr;
-      const target_67 = (mhr - rhr) * 0.67 + rhr;
-      const target_75 = (mhr - rhr) * 0.75 + rhr;
-      const target_85 = (mhr - rhr) * 0.85 + rhr;
-      document.getElementById('mhr').innerText = `Maximum heart rate: ${mhr.toFixed(0)} bpm`;
+      let userMHR = parseFloat(document.getElementById('mhrInput').value);
+
+      const target_59 = (userMHR - rhr) * 0.59 + rhr;
+      const target_67 = (userMHR - rhr) * 0.67 + rhr;
+      const target_75 = (userMHR - rhr) * 0.75 + rhr;
+      const target_85 = (userMHR - rhr) * 0.85 + rhr;
       document.getElementById('result_UT2').innerText = `UT2: ${target_59.toFixed(0)} - ${target_67.toFixed(0)} bpm`;
       document.getElementById('result_UT1').innerText = `UT1: ${target_67.toFixed(0)} - ${target_75.toFixed(0)} bpm`;
       document.getElementById('result_AT').innerText = `AT: ${target_75.toFixed(0)} - ${target_85.toFixed(0)} bpm`;
-      document.getElementById('result_TR').innerText = `TR: ${target_85.toFixed(0)} - ${mhr.toFixed(0)} bpm`;
+      document.getElementById('result_TR').innerText = `TR: ${target_85.toFixed(0)} - ${userMHR.toFixed(0)} bpm`;
       localStorage.setItem('age', age);
       localStorage.setItem('rhr', rhr);
+      localStorage.setItem('mhr', userMHR);
     }
   </script>
   <br>
