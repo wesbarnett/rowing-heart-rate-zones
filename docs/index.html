@@ -1,102 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Heart Rate Zone Calculator</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; }
     label { display: block; margin-top: 10px; }
-    input { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px; width: 100%; cursor: pointer; }
-    .result-box {
-        margin-top: 20px;
-        font-weight: bold;
-        font-size: 1.2em;
-    }
-    .error {
-        color: red;
-    }
-    .formula { margin-top: 20px; font-style: italic; font-size: 0.9em; color: #555; }
+    input[type="number"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    .checkbox-row { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: start; margin-top: 8px; }
+    .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 5px; }
+    .checkbox-row label { margin: 0; cursor: pointer; line-height: 1.2; }
+    .result-box { margin-top: 15px; font-weight: bold; font-size: 1.1em; }
+    .error { color: red; margin-top: 10px; }
+    .formula { margin-top: 15px; font-style: italic; font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
   <h2>Rowing Heart Rate Zones Calculator</h2>
 
-  <div>Enter your age to calculate maximum heart rate, or enter maximum heart rate directly.</div>
-
   <label for="age">Age (years):</label>
   <input type="number" id="age" placeholder="Enter age">
 
+  <div class="checkbox-row">
+    <input type="checkbox" id="autoMHR">
+    <label for="autoMHR">Calculate Maximum Heart Rate from Age</label>
+  </div>
+
   <label for="mhrInput">Maximum Heart Rate (bpm):</label>
-  <input type="number" id="mhrInput" placeholder="Auto-calculated if age entered">
+  <input type="number" id="mhrInput" placeholder="Auto-calculated if enabled">
 
   <label for="rhr">Resting Heart Rate (bpm):</label>
   <input type="number" id="rhr" placeholder="Enter resting heart rate">
 
-  <button type="button" onclick="calculateZone()">Calculate</button>
-
   <div class="error" id="error"></div>
+  <div class="result-box" id="mhr">Maximum heart rate:</div>
   <div class="result-box" id="result_UT2">UT2:</div>
   <div class="result-box" id="result_UT1">UT1:</div>
   <div class="result-box" id="result_AT">AT:</div>
   <div class="result-box" id="result_TR">TR:</div>
 
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        const savedAge = localStorage.getItem('age');
-        const savedRHR = localStorage.getItem('rhr');
-        const savedMHR = localStorage.getItem('mhr');
-        if (savedAge) document.getElementById('age').value = savedAge;
-        if (savedRHR) document.getElementById('rhr').value = savedRHR;
-        if (savedMHR) document.getElementById('mhrInput').value = savedMHR;
-        if (savedRHR && savedMHR) calculateZone();
+<script>
+  function computeMHR(age) {
+    if (age < 31) return 220 - age;
+    return 190 - (age - 30) / 2;
+  }
 
-    });
-    document.getElementById('age').addEventListener('input', () => {
-      const age = parseFloat(document.getElementById('age').value);
-      if (!isNaN(age)) {
-          let calculated;
-          if (age < 31) {
-              calculated = 220 - age;
-          } else {
-              calculated = 190 - (age - 30) / 2;
-          }
-          document.getElementById('mhrInput').value = calculated.toFixed(0);
-      }
-    });
-    function calculateZone() {
-      const age = parseFloat(document.getElementById('age').value);
-      const rhr = parseFloat(document.getElementById('rhr').value);
-      let userMHR = parseFloat(document.getElementById('mhrInput').value);
+  function updateMHRState() {
+    const auto = document.getElementById('autoMHR').checked;
+    const age = parseFloat(document.getElementById('age').value);
+    const mhrInput = document.getElementById('mhrInput');
 
-      const target_59 = (userMHR - rhr) * 0.59 + rhr;
-      const target_67 = (userMHR - rhr) * 0.67 + rhr;
-      const target_75 = (userMHR - rhr) * 0.75 + rhr;
-      const target_85 = (userMHR - rhr) * 0.85 + rhr;
-      document.getElementById('result_UT2').innerText = `UT2: ${target_59.toFixed(0)} - ${target_67.toFixed(0)} bpm`;
-      document.getElementById('result_UT1').innerText = `UT1: ${target_67.toFixed(0)} - ${target_75.toFixed(0)} bpm`;
-      document.getElementById('result_AT').innerText = `AT: ${target_75.toFixed(0)} - ${target_85.toFixed(0)} bpm`;
-      document.getElementById('result_TR').innerText = `TR: ${target_85.toFixed(0)} - ${userMHR.toFixed(0)} bpm`;
-      localStorage.setItem('age', age);
-      localStorage.setItem('rhr', rhr);
-      localStorage.setItem('mhr', userMHR);
+    if (auto && !isNaN(age)) {
+      mhrInput.value = computeMHR(age).toFixed(0);
+      mhrInput.disabled = true;
+    } else {
+      mhrInput.disabled = false;
     }
-  </script>
-  <br>
-  <h4>About</h4>
-  <div>The formula used for each zone above is:</div>
-  <div class="formula">(MHR - RHR) * % + RHR</div>
-  <br>
-  <div>The maximum heart rate (MHR) is calculated using the age input. Every year 30 and below is expected to decrease maximum heart rate by one from a starting value of 220. Every year above age 30 each year counts only half a beat in that difference.</div>
-  <br>
-  <div>The percentages used are as follows:</div>
-  <ul>
-      <li>UT2 = 59%-67%</li>
-      <li>UT1 = 67%-75%</li>
-      <li>AT = 75%-85%</li>
-      <li>TR = 85%-100%</li>
-  </ul>
+  }
+
+  function calculateZone() {
+    const age = parseFloat(document.getElementById('age').value);
+    const rhr = parseFloat(document.getElementById('rhr').value);
+    const mhr = parseFloat(document.getElementById('mhrInput').value);
+
+    if (isNaN(age) || isNaN(rhr) || isNaN(mhr)) {
+      document.getElementById('error').innerText = 'Please enter valid numbers.';
+      return;
+    }
+
+    document.getElementById('error').innerText = '';
+
+    const t59 = (mhr - rhr) * 0.59 + rhr;
+    const t67 = (mhr - rhr) * 0.67 + rhr;
+    const t75 = (mhr - rhr) * 0.75 + rhr;
+    const t85 = (mhr - rhr) * 0.85 + rhr;
+
+    document.getElementById('mhr').innerText = `Maximum heart rate: ${mhr.toFixed(0)} bpm`;
+    document.getElementById('result_UT2').innerText = `UT2: ${t59.toFixed(0)} - ${t67.toFixed(0)} bpm`;
+    document.getElementById('result_UT1').innerText = `UT1: ${t67.toFixed(0)} - ${t75.toFixed(0)} bpm`;
+    document.getElementById('result_AT').innerText = `AT: ${t75.toFixed(0)} - ${t85.toFixed(0)} bpm`;
+    document.getElementById('result_TR').innerText = `TR: ${t85.toFixed(0)} - ${mhr.toFixed(0)} bpm`;
+
+    localStorage.setItem('age', age);
+    localStorage.setItem('rhr', rhr);
+    localStorage.setItem('mhr', mhr);
+    localStorage.setItem('autoMHR', document.getElementById('autoMHR').checked);
+  }
+
+  function triggerUpdate() {
+    updateMHRState();
+    calculateZone();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('age').addEventListener('input', triggerUpdate);
+    document.getElementById('rhr').addEventListener('input', triggerUpdate);
+    document.getElementById('mhrInput').addEventListener('input', triggerUpdate);
+    document.getElementById('autoMHR').addEventListener('change', triggerUpdate);
+
+    const savedAge = localStorage.getItem('age');
+    const savedRHR = localStorage.getItem('rhr');
+    const savedMHR = localStorage.getItem('mhr');
+    const savedAuto = localStorage.getItem('autoMHR') === 'true';
+
+    if (savedAge) document.getElementById('age').value = savedAge;
+    if (savedRHR) document.getElementById('rhr').value = savedRHR;
+    if (savedMHR) document.getElementById('mhrInput').value = savedMHR;
+    document.getElementById('autoMHR').checked = savedAuto;
+
+    triggerUpdate();
+  });
+</script>
+
+<br>
+<h4>About</h4>
+<div>The formula used for each zone above is:</div>
+<div class="formula">(MHR - RHR) * % + RHR</div>
+<br>
+<div>If enabled, the maximum heart rate (MHR) is calculated using age:</div>
+<ul>
+  <li>Age ≤ 30 → MHR = 220 - age</li>
+  <li>Age > 30 → MHR = 190 - (age - 30) / 2</li>
+</ul>
+<div>You may also disable automatic calculation and enter your own tested/known MHR manually.</div>
+<br>
+<div>The percentages used are as follows:</div>
+<ul>
+    <li>UT2 = 59%-67%</li>
+    <li>UT1 = 67%-75%</li>
+    <li>AT = 75%-85%</li>
+    <li>TR = 85%-100%</li>
+</ul>
+
 </body>
 </html>
-
